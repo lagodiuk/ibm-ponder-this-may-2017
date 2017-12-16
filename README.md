@@ -24,7 +24,20 @@ As far as 4 is neither a divisor of `26`, nor a divisor of `(26-3)` - an extra s
 
 I have implemented a version of the [Simulated Annealing algorithm](https://en.wikipedia.org/wiki/Simulated_annealing) for generation of the proper placement of the pairs of characters (according to the constraints of the problem).
 
+The Java implementation of the described solution: [SimulatedAnnealingSolution.java](SimulatedAnnealingSolution.java)
+
+In order to execute the solution it is just needed to run the method `main` of the class `SimulatedAnnealingSolution`.
+
+*Remark: of course this code is NOT of a production quality. The biggest accent is made on the succinct implementation of the described algorithm in combination with runtime and memory optimizations. Also, I was trying to use the meaningful names of the variables and functions, however sometimes it was not easy to came up with a proper naming.*
+
 Here is one of the possible answers, produced by my implementation:
 ```text
 Q-NDSTGYDZROFXGPENQFJVEUSWTOLRCJPYCKZMXBILBHVUAKAWIMH
 ```
+## Investigation of some probabilistic properties of the Langford pairing problem
+
+While I was solving the problem - I was feeling myself very involved, which encouraged me to investigate the properties of the Langford sequences from the probabilistic point of view.
+
+Thus, I have written a blog post with all my findings: http://lagodiuk.github.io/computer_science/2017/06/04/langford_pairing_problem.html
+
+Also, all my fidings are described in the PDF document: [yurii_lahodiuk_may_2017_challenge.pdf](yurii_lahodiuk_may_2017_challenge.pdf)
