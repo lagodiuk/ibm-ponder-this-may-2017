@@ -17,6 +17,8 @@ The URL of the web page with the problem description: http://www.research.ibm.co
 
 It turns out, that the provided problem is a variation of the [Langford pairing](https://en.wikipedia.org/wiki/Langford_pairing) problem (from the area of combinatorial mathematics).
 
+![img](img/img1.png)
+
 The Langford pairing sequence with `n` pairs can be constructed if and only if either 4 divides `n`, or 4 divides `(n-3)`.
 
 For characters "A-Z" amount of pairs of characters is `n=26`.
@@ -30,10 +32,16 @@ In order to execute the solution it is just needed to run the method `main` of t
 
 *Remark: of course this code is NOT of a production quality. The biggest accent is made on the succinct implementation of the described algorithm in combination with runtime and memory optimizations. Also, I was trying to use the meaningful names of the variables and functions, however sometimes it was not easy to came up with a proper naming.*
 
-Here is one of the possible answers, produced by my implementation:
+## Answer
+
+Below is provided one of the possible answers, produced by my implementation:
 ```text
 Q-NDSTGYDZROFXGPENQFJVEUSWTOLRCJPYCKZMXBILBHVUAKAWIMH
 ```
+Here is the list of possible placements, obtained via the Simulated Annealing solution for different amounts of pairs:
+
+![img](img/solutions.png)
+
 ## Investigation of some probabilistic properties of the Langford pairing problem
 
 While I was solving the problem - I was feeling myself very involved, which encouraged me to investigate the properties of the Langford sequences from the probabilistic point of view.
