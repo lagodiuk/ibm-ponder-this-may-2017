@@ -1,0 +1,1177 @@
+% !TEX encoding = UTF-8 Unicode
+% -*- coding: UTF-8; -*-
+% vim: set fenc=utf-8
+
+\documentclass{article}
+
+% http://stackoverflow.com/questions/3175105/writing-code-in-latex-document
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\usepackage[top=1in, bottom=1.5in, left=1in, right=1in]{geometry}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1,T2A]{fontenc}
+\usepackage[ukrainian,english]{babel}
+
+\usepackage{amssymb}
+
+\usepackage{mathtools}
+\usepackage{amsmath}
+\usepackage{empheq}
+
+% http://tex.stackexchange.com/questions/118410/highlight-terms-in-equation-mode
+\usepackage{xcolor}
+\newcommand{\highlight}[1]{\colorbox{green!10}{$\displaystyle#1$}}
+
+% checkmark
+\usepackage{ amssymb }
+
+% Explanation of the variables of equations
+% https://tex.stackexchange.com/questions/95838/how-to-write-a-perfect-equation-parameters-description
+\usepackage{array}
+\newenvironment{conditions}[1][where:]
+  {#1 \begin{tabular}[t]{>{$}l<{$} @{${} - {}$} l}}
+  {\end{tabular}\\[\belowdisplayskip]}
+  
+\newenvironment{conditions_eq}[1][where:]
+  {#1 \begin{tabular}[t]{>{$}l<{$} @{${} = {}$} l}}
+  {\end{tabular}\\[\belowdisplayskip]}
+
+% For the purpose of using \mathbb
+% https://tex.stackexchange.com/questions/38769/mathbbz-yields-undefined-control-sequence-error
+\usepackage{amsfonts}
+
+% Expectation operator
+% https://tex.stackexchange.com/questions/229023/expectation-operator
+\usepackage{amsmath,amssymb,mathtools,bm,etoolbox}
+\providecommand\given{}
+\DeclarePairedDelimiterXPP\Aver[1]{\mathbb{E}}{[}{]}{}{
+\renewcommand\given{  \nonscript\:
+  \delimsize\vert
+  \nonscript\:
+  \mathopen{}
+  \allowbreak}
+#1
+}
+
+% https://stats.meta.stackexchange.com/questions/1419/latex-macros-for-expectation-variance-and-covariance
+\newcommand{\Var}{\mathrm{Var}}
+
+\usepackage{tikz} 
+
+% https://tex.stackexchange.com/questions/50349/color-only-a-cell-of-a-table
+\usepackage{xcolor,colortbl}
+
+% https://tex.stackexchange.com/questions/272/how-to-make-clickable-links-and-cross-references-in-pdfs-produced-by-latex
+\usepackage{hyperref}
+
+% https://tex.stackexchange.com/questions/42805/what-are-original-itemize-bullet-definitions
+\renewcommand{\labelitemii}{$\circ$}
+
+\begin{document}
+
+\title{Investigation of some probabilistic properties of the problem}
+\author{Yurii Lahodiuk \\ yura.lagodiuk@gmail.com}
+\date{May 2017}
+\maketitle
+
+\tableofcontents
+
+\clearpage
+
+\section{Summary}
+
+The goal of the problem is to generate a "properly-placed" sequence of $n$ characters (there are two instances of each character). A properly-placed sequence of characters is a such sequence, where amounts of characters between pairs of the same characters are equal to the indices of characters in the alphabetic order (e.g.: distance between characters "A" is 1, distance between characters "B" is 2, and so on). \\
+
+In scope of this problem, I have revealed the following facts:
+
+\begin{itemize}
+	
+	\item The sequence of $n$ pairs of characters doesn't require extra space-character in case if: 
+		\begin{itemize}	
+			\item either: $4 \vert n$ 
+			\item or: $4 \vert (n-3)$
+		\end{itemize}	
+	Otherwise an extra space-character (e.g. hyphen) is needed. For more details (and proof) check sections \ref{small-instances-exploration} and \ref{proof-2n}.
+	
+	\item I have analysed the possibility to obtain a properly-placed sequence as a result of a random permutation of a sequence of $n$ pairs of characters. I have considered a random variable $\xi$, which denotes an amount of correctly placed pairs of characters (the distances between the characters of these pairs are equal to the indices of these characters). In scope of this exercise I have derived an expected amount and a variance of $\xi$:
+		\begin{itemize}		
+			\item $\Aver*{\xi} = {3n - 3 \over 4n - 2}$
+			\item $\Var(\xi) = {3 \over 4} + {4 \over 3n} + {4 \over n - 1} - {127 \over 96 \cdot (2n - 3)} - {363 \over 32 \cdot (2n - 1)} - {9 \over 16 \cdot (2n - 1)^2}$
+		\end{itemize}
+	For more details (and derivation) check sections \ref{expectation-derivation} and \ref{variance-derivation}. The values obtained via derived formulas of expectation and variance are consistent to the values obtained via computer simulation (for more details check a section \ref{experimental-evaluation}).
+	
+	\item Using Markov's and Chebyshev's inequalities I have derived weak bounds for the probability to obtain a properly-placed sequence as a result of a random permutation:
+		\begin{itemize}		
+			\item $P(\xi \geqslant n) \leqslant {3n - 3 \over 4n^2 - 2n}$
+			\item $P(\xi \geqslant n) \leqslant {16 + 5n - 160n^2 + 215n^3 - 116n^4 + 24n^5 \over (n - 1) \cdot n \cdot (2n - 3) \cdot (4n^2 - 5n + 3)^2}$
+		\end{itemize}
+	For more details check a section \ref{probabilistic-bounds}.
+	
+	\item It turns out, that to some extent, it is viable to use a Poisson distribution as a rough approximation of the distribution of values of the random variable $\xi$. The event rate of the given Poisson distribution is $\lambda = {3 \over 4}$. The probability of occurrence of $k$ correctly placed pairs is:
+		\begin{itemize}
+			\item $P(\xi = k) = e^{-{3 \over 4}} \cdot \left({3 \over 4}\right)^k \cdot {1 \over k!}$
+		\end{itemize}
+	For more details and results of experimental evaluation (using computer simulation) check a section \ref{poisson-distribution}.
+	
+	\item I have implemented a Simulated Annealing algorithm for generation of the proper placement. The code can be found inside appendix \ref{simulated-annealing-solution}.
+	
+	\item One of the possible proper placements for $n=26$ is (obtained using Simulated Annealing algorithm): \\
+	Q-NDSTGYDZROFXGPENQFJVEUSWTOLRCJPYCKZMXBILBHVUAKAWIMH
+	
+\end{itemize}
+
+Below is presented a table of the correct placements from $n = 1$ up to $n = 26$, obtained via Simulated Annealing algorithm: \\
+
+\begin{tabular}{ | c | l | }	
+\hline
+$n$	&	Placement \\ \hline
+1	&	A-A \\ \hline
+2	&	ABA-B \\ \hline
+3	&	CABACB \\ \hline
+4	&	DACABDCB \\ \hline
+5	&	ECADACEBD-B \\ \hline
+6	&	DBF-BDECAFACE \\ \hline
+7	&	AEAFCGDECBFDBG \\ \hline
+8	&	BFGBDHECFDGCEAHA \\ \hline
+9	&	B-HBEIFAGAEHDFCIGDC \\ \hline
+10	&	CDEJCID-EHFAGAJIBFHBG \\ \hline
+11	&	AEAFHIJEKBFGBHCIDJCGKD \\ \hline
+12	&	GBHJBFILGEKHFCJEICDALAKD \\ \hline
+13	&	JACAEICLMDEJKGDIBHFBLGM-KFH \\ \hline
+14	&	KNHIJ-LBEMBHKIEJNCFLGCDMAFADG \\ \hline
+15	&	ADAOHEDNFJGELHMFIKGOJBNCBLICMK \\ \hline
+16	&	PGAJAIENLGOFEKJIMPFDHLNCDKOCBHMB \\ \hline
+17	&	FDO-JKDFPCQBNCBJLKOMAIAHEPGNQLEIHMG \\ \hline
+18	&	GELMAQAEGCPRKCJLIMN-OFHQKJIPFDRHBNDBO \\ \hline
+19	&	JNKAHAMOLPFJRHKSNFQBMLBOGDPIECDRGCESQI \\ \hline
+20	&	HKEMRFDNEHSDFKTOQMILCPNRCGJAIASOLGQTBJPB \\ \hline
+21	&	HEISFNREQHBFIBMTP-KUNGLSORQDMGKJDPCLTACAOUJ \\ \hline
+22	&	AIADLGCNDMCIRGVQULPJTENMSHOEKBJRBQHPFVU-KTOFS \\ \hline
+23	&	CUQICVNJGPRWLIOFGTJMQNFUSLPKVROHAMAWDETKHDBESB \\ \hline
+24	&	FNCJGDCFQVDWGMJTNSAXARPUEOQMBLEBVIKWTSHPROLIXUKH \\ \hline
+25	&	UHCKGVCLEOHXGSEKM-YWLTUNJODRVQMDPSFJXANAIFTWYBRQBPI \\ \hline
+26	&	Q-NDSTGYDZROFXGPENQFJVEUSWTOLRCJPYCKZMXBILBHVUAKAWIMH \\ \hline
+\end{tabular}
+
+% \clearpage
+
+\section{With or without extra space-character?}
+
+\subsection{Exploration of small instances of the problem using a brute-force approach} \label{small-instances-exploration}
+
+In order to figure out, in which cases an extra space-character is required to solve the problem, I have checked the small instances of the problem using a brute-force approach (based on the backtracking technique), which can be summarized in a following recurrence relation:
+
+\begin{equation} \label{eq:e_0}
+F(\mathbb{X}, d) = 
+\begin{cases}
+True,   & if\ \mathbb{X} = \O \\
+False, & if\ \forall x, y \in \mathbb{X}, (y - x) \neq d + 1 \\
+\\
+{\mathop{\bigvee}\limits_{(x, y) \in \{(x, y) \vert x,y \in \mathbb{X}, (y - x) = d + 1\}}} F \left(\mathbb{X} \setminus \{x, y\}, d + 1\right),\  & otherwise
+\end{cases}
+\end{equation}
+
+\begin{conditions} 
+\mathbb{X} & a set of non-occupied positions \\
+d & a distance (gap) between the current pair of characters \\
+\bigvee & denotes a logical disjunction between multiple expressions (similar to the capital-sigma notation) \\
+\end{conditions} 
+
+For different amounts of pairs of unique characters $n$ - either $F(\{1, 2, ..., 2n\}, 1)$ or $F(\{1, 2, ... ,(2n + 1)\}, 1)$ is $True$. 
+The Java implementation of the brute-force code can be found inside appendix \ref{brute-force-code}.
+
+The analysis of small instances of the problem leads to the following observation:
+\begin{center}
+  \begin{tabular}{ | c | c | c | c | c | c | c | c | c | c | c | }
+    \hline
+    $n$ (pairs of unique characters)         & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10  \\ \hline
+    no extra space-character needed       &    &    & \cellcolor{green!10} \checkmark & \cellcolor{green!10} \checkmark &   &   & \cellcolor{green!10} \checkmark & \cellcolor{green!10} \checkmark &   &   \\ \hline
+    requires extra space-character & \cellcolor{green!10} \checkmark & \cellcolor{green!10} \checkmark &  &  & \cellcolor{green!10} \checkmark & \cellcolor{green!10} \checkmark &  &  & \cellcolor{green!10} \checkmark & \cellcolor{green!10} \checkmark \\ \hline
+  \end{tabular}
+\end{center}
+
+Based on this observation, I have conjectured, that in case if $4 \vert n$ or $4 \vert (n-3)$ the $n$ pairs of unique characters can be arranged into the sequence of length $2n$, otherwise an extra space-character is needed.
+
+\subsection{In which cases the problem can be solved without extra space-character?} \label{proof-2n}
+
+Let's consider an arrangement of $n$ pairs of unique characters into a sequence without an extra space-character (length is $2n$), which satisfies conditions of the problem. 
+
+For the sake of convenience, let's establish a mapping from characters to natural numbers:
+
+\begin{center}
+  \begin{tabular}{ | c | c | }
+    \hline
+    A & 1  \\ \hline
+    B & 2 \\ \hline
+    C & 3 \\ \hline
+    \multicolumn{2}{ | c | }{...}  \\ \hline
+    Z & 26 \\ \hline
+  \end{tabular}
+\end{center}
+
+Every character can be associated with two numbers: $x_i$ and $y_i$, which represent the indices of the first and the second occurrence of the character in the sequence ($i$ - is a number, which corresponds to the character).
+According to the requirements of the problem, we can define the system of following constraints: 
+
+\begin{equation} \label{eq:e_1}
+\begin{split}
+\begin{cases}
+y_i = x_i + i + 1, \forall i \in \{1, ... , n\} \\
+x_i, y_i \in \{1, ... 2n\}, \forall i \in \{1, ... , n\} \\
+\{ x_1, x_2, ... , x_n \} \cup \{ y_1, y_2, ... , y_n \} = \{1, 2, 3, ... , 2n\}
+\end{cases}
+\end{split}
+\end{equation}
+
+The third and the second constraints mean, that all values of $x_i$ and $y_i$ must be unique. 
+
+Having the third constraint in mind, let's calculate the sum of all $x_i$ and $y_i$:
+
+\begin{equation} \label{eq:e_2}
+\begin{split}
+\highlight{ \sum_{i = 1}^{n} x_i + \sum_{i = 1}^{n} y_i } = \sum_{i = 1}^{2n} i = \highlight{ n \cdot (2n + 1) }
+\end{split}
+\end{equation}
+
+On the other hand, having the first constraint in mind, the sum of all $x_i$ and $y_i$ can be represented in a following way:
+
+\begin{equation} \label{eq:e_3}
+\begin{split}
+\highlight{ \sum_{i = 1}^{n} x_i + \sum_{i = 1}^{n} y_i } = \sum_{i = 1}^{n} x_i + \sum_{i = 1}^{n} \left( x_i + i + 1 \right) = \sum_{i = 1}^{n} \left( 2 \cdot x_i + i + 1 \right) = \highlight{ \left( 2 \cdot \sum_{i = 1}^{n} x_i \right) + {n^2 + 3n \over 2} }
+\end{split}
+\end{equation}
+
+Hence, from equations (\ref{eq:e_2}) and (\ref{eq:e_3}) we have:
+
+\begin{equation} \label{eq:e_4}
+\begin{split}
+\left( 2 \cdot \sum_{i = 1}^{n} x_i \right) + {n^2 + 3n \over 2} = n \cdot (2n + 1) \iff \highlight{ \sum_{i = 1}^{n} x_i = {3n^2-n \over 4} }
+\end{split}
+\end{equation}
+
+As far as the sum of all $x_i$ is integer, then ${3n^2-n \over 4}$ must be integer as well. It is possible iff $\highlight{4 \vert n}$ or $\highlight{4 \vert (n-3)}$, which is consistent with observations based on the small instances of the problem.
+
+Hence, in case if $4 \vert n$ or $4 \vert (n-3)$ the $n$ pairs of unique characters can be arranged into the sequence of length $2n$ (with respect to the constraints of the problem), otherwise an extra space-character is needed.
+
+\section{Random permutations of the sequence of $n$ pairs of characters}
+
+Let's explore the possibility to obtain a correct placement (which will satisfy all constraints) as a result of the random permutation of the sequence of $n$ pairs of characters (let's consider the sequence without an extra space-character - so, the total length is $2n$).
+
+\subsection{Expectation of the amount of correct placements} \label{expectation-derivation}
+
+Let's consider a discrete valued random variable $\xi$, which represents an amount of correct placements of pairs of characters (which satisfy the first constraint from the system of constraints (\ref{eq:e_1})). In order to proceed, let's represent $\xi$ as a sum of indicator random variables:
+
+\begin{equation} \label{eq:e_5}
+\xi = \xi_1 + \xi_2 + ... + \xi_n
+\end{equation}
+
+where $\xi_i$ is a random variable, which indicates - whether the pair of $i$-th characters placed correctly (based on notation of $x_i$ and $y_i$ from the section (\ref{proof-2n})):
+\begin{equation} 
+\xi_i = 
+\begin{cases}
+1,\ if\ y_i - x_i = i + 1 \\
+0,\ otherwise
+\end{cases}, \forall i \in \{1, 2, ... , n\}
+\end{equation}
+
+Due to the linearity of the expectation:
+
+\begin{equation} 
+\Aver{\xi} = \Aver*{\xi_1 + \xi_2 + ... + \xi_n} = \sum_{i=1}^{n}\Aver{\xi_i} = \sum_{i=1}^{n}P\left(y_i - x_i = i + 1\right)
+\end{equation} 
+
+For every pair of characters with index $i \in \{1, 2, ... , n\}$ out of ${2n \choose 2}$ possible positions for $x_i$ and $y_i$ - there are only $(2n - i - 1)$ positions, which satisfy constraint $y_i = x_i + i + 1$. For example:
+
+\begin{center}
+\begin{tikzpicture}[scale=0.8]
+\draw (0,0) rectangle (1,1);
+\draw (1,0) rectangle (2,1);
+\draw (2,0) rectangle (3,1);
+\draw (3,0) rectangle (4,1);
+
+\node [below] at (5,0.5) {...};
+
+\draw (6,0) rectangle (7,1);
+\draw [fill=gray](7,0) rectangle (8,1);
+\draw (8,0) rectangle (9,1);
+\draw (9,0) rectangle (10,1);
+\draw [fill=gray](10,0) rectangle (11,1);
+
+\draw (0,0) -- (0,-1.5);
+\draw (11,0) -- (11,-1.5);
+\draw [<->, dashed] (0,-1.4) -- (11,-1.4);
+
+\node [below] at (5,-1.6) {$2n$};
+
+\draw [ultra thick](10.5,1) -- (10.5,2);
+\draw [ultra thick](7.5,1) -- (7.5,2);
+\draw [ultra thick](7.5,2) -- (10.5,2);
+
+\node [above left] at (7.5,1) {$x_i$};
+\node [above right] at (10.5,1) {$y_i$};
+
+\node [above] at (9,1) {$i = 2$};
+\node [above] at (9,2) {$y_i - x_i = i + 1$};
+
+\draw (8,0) -- (8,-1);
+\draw [<->, dashed] (0,-0.5) -- (8,-0.5);
+\node [below] at (4,-0.5) {$x_i \in \{1, 2, ... , (2n - i - 1)\}$};
+
+\end{tikzpicture}
+\end{center}
+
+Hence:
+
+\begin{equation} 
+P(y_i - x_i = i + 1) = {2n - i - 1 \over {2n \choose 2}},\ \forall i \in \{1, 2, ... , n\}
+\end{equation} 
+
+So, expectation of the amount of correct placements can be represented as:
+
+\begin{equation} \label{eq:expectation_final}
+\highlight{\Aver{\xi}} = \sum_{i=1}^{n}{2n - i - 1 \over {2n \choose 2}} = {3n^2 - 3n \over 2 \cdot {2n \choose 2}} = \highlight{{3n - 3 \over 4n - 2}}
+\end{equation} 
+
+\subsection{Variance of the amount of correct placements} \label{variance-derivation}
+
+Let's calculate the variance of $\xi$:
+
+\begin{equation} 
+\Var(\xi) = \Aver{\xi^2} - \left( \Aver{\xi} \right)^2 = \Aver*{\xi_1^2 + ... + \xi_n^2 + \sum_{i \neq j}\xi_i \cdot \xi_j} - \left( \Aver{\xi} \right)^2 
+\end{equation} 
+
+As far, as $\xi_i$ is an indicator random variable, then:
+
+\begin{equation} 
+\xi_i^2 = \xi_i = 
+\begin{cases}
+1,\ if\ y_i - x_i = i + 1 \\
+0,\ otherwise
+\end{cases}, \forall i \in \{1, 2, ... , n\}
+\end{equation}
+
+We can make use of the linearity property of expectation again: 
+
+\begin{equation} \label{eq:var_linear}
+\Var(\xi) = \Aver*{\xi_1^2 + ... + \xi_n^2} + \Aver*{\sum_{i \neq j}\xi_i \cdot \xi_j} - \left( \Aver{\xi} \right)^2 = \Aver*{\xi} + \Aver*{\sum_{i \neq j}\xi_i \cdot \xi_j} - \left( \Aver{\xi} \right)^2
+\end{equation} 
+
+However, we need to calculate somehow the value of: $\Aver*{\sum_{i \neq j}\xi_i \cdot \xi_j}$. Due to the symmetry, we can consider only the cases, when $i < j$:
+
+\begin{equation} \label{eq:e_xi_i_xi_j_symmetry}
+\Aver*{\sum_{i \neq j}\xi_i \cdot \xi_j} = 2 \cdot \Aver*{\sum_{i < j}\xi_i \cdot \xi_j}
+\end{equation}
+
+It turns out, that $\xi_i \cdot \xi_j$ is also an indicator random variable, which is defined in a following way:
+
+\begin{equation} 
+\xi_i \cdot \xi_j = 
+\begin{cases}
+1,\ if\ y_i - x_i = i + 1\ \wedge\  y_j - x_j = j + 1 \\
+0,\ otherwise
+\end{cases}, \forall i,j \in \{1, 2, ... , n\},\ i \neq j
+\end{equation}
+
+Hence, we have:
+
+\begin{equation} \label{eq:expected_xi_i_xi_j}
+\Aver*{\sum_{i < j}\xi_i \cdot \xi_j} = \sum_{i < j} P\left( \xi_i \cdot \xi_j = 1 \right)
+\end{equation} 
+\\
+
+$P\left( \xi_i \cdot \xi_j = 1 \right)$ is equal to a joint probability $P\left( y_i - x_i = i + 1,\   y_j - x_j = j + 1 \right)$:
+
+\begin{equation} \label{eq:p_xi_i_xi_j}
+P\left( \xi_i \cdot \xi_j = 1 \right) = P\left( y_i - x_i = i + 1,\   y_j - x_j = j + 1 \right) = {M_{i,j} \over {2n \choose 2} \cdot {2n - 2 \choose 2}}
+\end{equation}
+
+\begin{conditions} 
+M_{i,j} & number of ways to place correctly the $i$-th and $j$-th pair of characters \\
+{2n \choose 2} \cdot {2n - 2 \choose 2} & number of ways to choose values for: $x_i$, $y_i$, $x_j$ and $y_j$ \\
+\end{conditions} 
+
+Let's calculate $M_{i,j}$. The set of all correct relative arrangements of $x_i$, $y_i$, $x_j$ and $y_j$ can be divided into three disjoint sets with $interleaved$ ($\mathbb{I}_{ij}$), $nested$ ($\mathbb{N}_{ij}$) and $separate$ ($\mathbb{S}_{ij}$) relative placements. Hence:
+\begin{equation}
+\begin{split}
+M_{i,j} & = \left| \mathbb{I}_{ij} \sqcup \mathbb{N}_{ij} \sqcup \mathbb{S}_{ij} \right| = \left| \mathbb{I}_{ij} \right| + \left| \mathbb{N}_{ij} \right| + \left| \mathbb{S}_{ij} \right|
+\end{split}
+\end{equation}
+
+\begin{enumerate}
+\item Interleaved arrangements:
+
+\begin{itemize}
+\item $\highlight{x_i} < x_j < \highlight{y_i} < y_j$ 
+\item $x_j < \highlight{x_i} < y_j < \highlight{y_i}$ 
+\end{itemize}
+
+Without loss of generality let's consider only a first variant: $\highlight{x_i} < x_j < \highlight{y_i} < y_j$ (the counting for the second variant will be exactly the same - so, we will just multiple an obtained result by $2$). 
+
+In order to produce the correct interleaved placement, we need to choose the proper positions of the leftmost and rightmost occupied cells ($x_i$ and $y_j$), and afterwards we can solely define the positions of $y_i$ and $x_j$ inside:
+
+\begin{tikzpicture}[scale=0.5]
+\draw (0,0) rectangle (1,1);
+\draw (1,0) rectangle (2,1);
+\draw (2,0) rectangle (3,1);
+\draw (3,0) rectangle (4,1);
+
+\node [below] at (5,0.5) {...};
+
+\draw (6,0) rectangle (7,1);
+\draw [fill=gray](7,0) rectangle (8,1);
+\draw (8,0) rectangle (9,1);
+\draw [fill=gray](9,0) rectangle (10,1);
+\draw (10,0) rectangle (11,1);
+\draw [fill=gray](11,0) rectangle (12,1);
+\draw (12,0) rectangle (13,1);
+\draw (13,0) rectangle (14,1);
+\draw (14,0) rectangle (15,1);
+\draw [fill=gray](15,0) rectangle (16,1);
+\draw (16,0) rectangle (17,1);
+\draw (17,0) rectangle (18,1);
+
+\draw [ultra thick](11.5,1) -- (11.5,2);
+\draw [ultra thick](7.5,1) -- (7.5,2);
+\draw [ultra thick](7.5,2) -- (11.5,2);
+
+\node [above left] at (7.5,1) {$x_i$};
+\node [above right] at (11.5,1) {$y_i$};
+
+\draw [ultra thick](9.5,0) -- (9.5,-1);
+\draw [ultra thick](15.5,0) -- (15.5,-1);
+\draw [ultra thick](9.5,-1) -- (15.5,-1);
+
+\node [below left] at (9.5,0) {$x_j$};
+\node [below right] at (15.5,0) {$y_j$};
+
+\end{tikzpicture}
+
+An amount of cells between the leftmost and rightmost occupied cells is:
+\begin{equation}
+d_{ij} = y_j - x_i - 1 = (x_j + j + 1) - (y_i - i - 1) - 1 = i + j + 2 - (y_i - x_j + 1) = i + j + 2 - k
+\end{equation}
+\begin{conditions_eq}
+k &  $y_i - x_j + 1$
+\end{conditions_eq}
+As far as $y_i \in \{x_j + 1, x_j + 2, ... , x_j + i\}$, then $k \in \{2, 3, ... , i + 1\}$.
+Hence the total amount of all possible interleaved placements is:
+
+\begin{equation} \label{eq:i_ij}
+\left| \mathbb{I}_{ij} \right| = 2 \cdot \sum_{k = 2}^{i + 1}{\left( 2n - d_{ij} - 1 \right)} = 2 \cdot \sum_{k = 2}^{i + 1}{\left( 2n - 3 - i - j + k \right)}
+\end{equation}
+
+\item Nested arrangement: 
+\begin{itemize}
+\item $x_j < \highlight{x_i} < \highlight{y_i} < y_j$ 
+\end{itemize}
+
+In order to produce the correct nested placement, we need to choose the proper positions of the leftmost and rightmost occupied cells ($x_j$ and $y_j$), and afterwards we should choose the proper positions for $x_i$ and $y_i$ inside:
+
+\begin{tikzpicture}[scale=0.5]
+\draw (0,0) rectangle (1,1);
+\draw (1,0) rectangle (2,1);
+\draw (2,0) rectangle (3,1);
+\draw (3,0) rectangle (4,1);
+
+\node [below] at (5,0.5) {...};
+
+\draw (6,0) rectangle (7,1);
+\draw (7,0) rectangle (8,1);
+\draw (8,0) rectangle (9,1);
+\draw [fill=gray](9,0) rectangle (10,1);
+\draw (10,0) rectangle (11,1);
+\draw [fill=gray](11,0) rectangle (12,1);
+\draw (12,0) rectangle (13,1);
+\draw [fill=gray](13,0) rectangle (14,1);
+\draw (14,0) rectangle (15,1);
+\draw [fill=gray](15,0) rectangle (16,1);
+\draw (16,0) rectangle (17,1);
+\draw (17,0) rectangle (18,1);
+
+\draw [ultra thick](11.5,1) -- (11.5,2);
+\draw [ultra thick](13.5,1) -- (13.5,2);
+\draw [ultra thick](11.5,2) -- (13.5,2);
+
+\node [above left] at (11.5,1) {$x_i$};
+\node [above right] at (13.5,1) {$y_i$};
+
+\draw [ultra thick](9.5,1) -- (9.5,2.5);
+\draw [ultra thick](15.5,1) -- (15.5,2.5);
+\draw [ultra thick](9.5,2.5) -- (15.5,2.5);
+
+\node [above left] at (9.5,1) {$x_j$};
+\node [above right] at (15.5,1) {$y_j$};
+
+\end{tikzpicture}
+
+An amount of ways to choose the proper positions for $x_j$ and $y_j$ is: $(2n - j - 1)$. Now, we need to choose the proper positions for $x_i$ and $y_i$ inside, and an amount of ways to do so is: $(j - i - 1)$. Hence:
+
+\begin{equation} \label{eq:n_ij}
+\left| \mathbb{N}_{ij} \right| = (2n - j - 1) \cdot (j - i - 1)
+\end{equation}
+
+\item Separate arrangements: 
+
+\begin{itemize}
+\item $\highlight{x_i} < \highlight{y_i} < x_j < y_j$ 
+\item $x_j < y_j < \highlight{x_i} < \highlight{y_i}$
+\end{itemize}
+
+Without loss of generality let's consider only a first variant: $\highlight{x_i} < \highlight{y_i} < x_j < y_j$  (the counting for the second variant will be exactly the same - so, we will just multiple an obtained result by $2$). 
+
+In order to produce the correct interleaved placement, we need to choose the proper positions of the leftmost and rightmost occupied cells ($x_i$ and $y_j$), and afterwards we can solely define the positions of $y_i$ and $x_j$ inside:
+
+\begin{tikzpicture}[scale=0.5]
+\draw (0,0) rectangle (1,1);
+\draw (1,0) rectangle (2,1);
+\draw (2,0) rectangle (3,1);
+\draw (3,0) rectangle (4,1);
+
+\node [below] at (5,0.5) {...};
+
+\draw (6,0) rectangle (7,1);
+\draw [fill=gray](7,0) rectangle (8,1);
+\draw (8,0) rectangle (9,1);
+\draw [fill=gray](9,0) rectangle (10,1);
+\draw (10,0) rectangle (11,1);
+\draw [fill=gray](11,0) rectangle (12,1);
+\draw (12,0) rectangle (13,1);
+\draw (13,0) rectangle (14,1);
+\draw (14,0) rectangle (15,1);
+\draw [fill=gray](15,0) rectangle (16,1);
+\draw (16,0) rectangle (17,1);
+\draw (17,0) rectangle (18,1);
+
+\draw [ultra thick](7.5,1) -- (7.5,2);
+\draw [ultra thick](9.5,1) -- (9.5,2);
+\draw [ultra thick](7.5,2) -- (9.5,2);
+
+\node [above left] at (7.5,1) {$x_i$};
+\node [above right] at (9.5,1) {$y_i$};
+
+\draw [ultra thick](11.5,1) -- (11.5,2);
+\draw [ultra thick](15.5,1) -- (15.5,2);
+\draw [ultra thick](11.5,2) -- (15.5,2);
+
+\node [above right] at (11.5,1) {$x_j$};
+\node [above right] at (15.5,1) {$y_j$};
+
+\end{tikzpicture}
+
+An amount of cells between the leftmost and rightmost occupied cells is:
+\begin{equation}
+d_{ij} = y_j - x_i - 1 = (x_j + j + 1) - (y_i - i - 1) - 1 = i + j + 2 + (x_j - y_i - 1) = i + j + 2 + k
+\end{equation}
+\begin{conditions_eq}
+k &  $x_j - y_i - 1$
+\end{conditions_eq}
+As far as $x_j \in \{y_i + 1, y_i + 2, ... , y_i + (2n - i - j - 2) \}$, then $k \in \{0, 1, ... , 2n - 3 - i - j\}$.
+Hence the total amount of all possible interleaved placements is:
+
+\begin{equation}
+\left| \mathbb{S}_{ij} \right| = 2 \cdot \smashoperator{\sum_{k = 0}^{2n - i - j - 3}}{\left( 2n - d_{ij} - 1 \right)} = 2 \cdot \smashoperator{\sum_{k = 0}^{2n - i - j - 3}}{\left( 2n - 3 - i - j - k \right)}
+\end{equation}
+
+The tidy analysis shows, that in case if $i + j > 2n - 3$ any separate arrangement of $i$-th and $j$-th pairs of characters is impossible within $2n$ slots. Hence, the complete formula for $\left| \mathbb{S}_{ij} \right|$ is:
+
+\begin{equation} \label{eq:s_ij}
+\left| \mathbb{S}_{ij} \right| = 
+\begin{cases}
+2 \cdot \displaystyle\smashoperator{\sum_{k = 0}^{2n - i - j - 3}}{\left( 2n - 3 - i - j - k \right)}, & if\ i + j \leqslant 2n - 3 \\
+\\
+0, & if\ i + j > 2n - 3
+\end{cases}
+\end{equation}
+
+\end{enumerate}
+
+So, finally, using equations (\ref{eq:i_ij}), (\ref{eq:n_ij}) and (\ref{eq:s_ij}) - we can express $M_{i,j}$ in terms of $i$, $j$ and $n$:
+
+\begin{equation} \label{eq:m_ij}
+\begin{split}
+	M_{i,j} & = \left| \mathbb{I}_{ij} \right| + \left| \mathbb{N}_{ij} \right| + \left| \mathbb{S}_{ij} \right| = \\
+	          & =
+	\begin{cases}
+		\left( 2 \cdot \displaystyle\sum_{k = 2}^{i + 1}{\left( 2n - 3 - i - j + k \right)} \right) + (2n - j - 1) \cdot (j - i - 1) + \left( 2 \cdot \displaystyle\smashoperator{\sum_{k = 0}^{2n - i - j - 3}}{\left( 2n - 3 - i - j - k \right)} \right), & if\ i + j \leqslant 2n - 3 \\
+		\\
+		\left( 2 \cdot \displaystyle\sum_{k = 2}^{i + 1}{\left( 2n - 3 - i - j + k \right)} \right) + (2n - j - 1) \cdot (j - i - 1), & if\ i + j > 2n - 3
+	\end{cases}
+\end{split}
+\end{equation}
+
+After simplification, we can obtain the closed form for $M_{i,j}$:
+
+\begin{equation} \label{eq:m_ij}
+	M_{i,j} = 
+	\begin{cases}
+		-2n \cdot (i + j + 6) + ij + 3i + 5j + 4n^2 + 7, & if\ i + j \leqslant 2n - 3 \\
+		\\
+		-i^2 + 2n \cdot (i + j - 1) - ij - 2i - j^2 + 1 , & if\ i + j > 2n - 3
+	\end{cases}
+\end{equation}
+
+Now, we are almost ready to calculate $\Aver*{\sum_{i < j}\xi_i \cdot \xi_j}$, using equations (\ref{eq:expected_xi_i_xi_j}) and (\ref{eq:p_xi_i_xi_j}): 
+
+\begin{equation} \label{eq:e_xi_i_xi_j_symmetry_2}
+	\Aver*{\sum_{i < j}\xi_i \cdot \xi_j} = \sum_{i < j} P\left( y_i - x_i = i + 1,\   y_j - x_j = j + 1 \right) = {\displaystyle\sum_{i < j}M_{i,j} \over {2n \choose 2} \cdot {2n - 2 \choose 2}}
+\end{equation} 
+
+In order to calculate the sum $\sum_{i < j}M_{i,j}$ let's consider separately the cases where $i + j \leqslant 2n - 3$ and $i + j > 2n - 3$:
+
+\begin{equation} \label{eq:sum_half_M_ij}
+\begin{split}
+	\sum_{i < j}M_{i,j} & = \left(\smashoperator\sum_{\substack{i < j, \\ i + j \leqslant 2n - 3}}M_{i,j}\right) + \left(\smashoperator\sum_{\substack{i < j, \\ i + j > 2n - 3}}M_{i,j}\right) = \\
+				   & = \left(\sum_{j=2}^{n-1}\sum_{i = 1}^{j-1} M_{i,j} + \sum_{i = 1}^{n-3} M_{i,n} \right) + \left( M_{n-1,n} + M_{n-2,n} \right)
+\end{split}
+\end{equation} 
+
+After simplification, we can obtain the closed form:
+
+\begin{equation}
+	\sum_{i < j}M_{i,j} = {1 \over 8} \cdot (n-2) \cdot (9n^3 - 28n^2 + 27n + 8)
+\end{equation}
+
+According to equations (\ref{eq:e_xi_i_xi_j_symmetry}), (\ref{eq:e_xi_i_xi_j_symmetry_2}) and (\ref{eq:sum_half_M_ij}) we can obtain the value of $\Aver*{\sum_{i \neq j}\xi_i \cdot \xi_j}$:
+
+\begin{equation}
+	\Aver*{\sum_{i \neq j}\xi_i \cdot \xi_j} = 2 \cdot {{1 \over 8} \cdot (n-2) \cdot (9n^3 - 28n^2 + 27n + 8) \over {2n \choose 2} \cdot {2n - 2 \choose 2}}
+\end{equation}
+
+So, using equations (\ref{eq:expectation_final}), (\ref{eq:var_linear}) and (\ref{eq:e_xi_i_xi_j_symmetry}) we can calculate the variance:
+
+\begin{equation}
+\begin{split}
+	\highlight{\Var(\xi)} & = {3n-3 \over 4n-2} + {(n - 2) \cdot (9n^3 - 28n^2 + 27n + 8) \over 4 \cdot {2n \choose 2} \cdot {2n - 2 \choose 2}} - \left({3n-3 \over 4n-2}\right)^2 \\
+		     & = \highlight{{3 \over 4} + {4 \over 3n} + {4 \over n - 1} - {127 \over 96 \cdot (2n - 3)} - {363 \over 32 \cdot (2n - 1)} - {9 \over 16 \cdot (2n - 1)^2}}
+\end{split}
+\end{equation}
+
+\subsection{Experimental evaluation} \label{experimental-evaluation}
+
+In order to verify derived formulas for expectation and variance, I have developed an application for simulation of random permutations on the sequences with different amounts of pairs of unique characters $n$ (for simplicity in every case the length of a sequence was $2n$). For every $n$ - application simulates $5 \cdot 10^5$ random permutations, and calculates the average amount (and variance) of correctly placed pairs of characters.  
+
+The code of a Java application for simulation is inside appendix \ref{expectation-variance-code}.
+
+Below is presented a table with comparison of the expectation and variance obtained experimentally and calculated, based on the derived formulas. As you can see, the values obtained via derived formulas of expectation and variance are consistent to the values obtained via computer simulation.
+
+\begin{center}
+  \begin{tabular}{ | p {27mm}  | p {27mm} | p {27mm}  | p {27mm}  | p {27mm}  | }
+    \hline
+    $n$ (amount of pairs of characters) & average amount of correct placements & \cellcolor{green!10} theoretical expectation & experimental variance & \cellcolor{green!10} theoretical variance \\ \hline 
+2 & 0.502 & 0.500 & 0.250 & 0.250 \\ \hline 
+3 & 0.601 & 0.600 & 0.462 & 0.462 \\ \hline 
+4 & 0.643 & 0.643 & 0.520 & 0.520 \\ \hline 
+5 & 0.669 & 0.667 & 0.562 & 0.560 \\ \hline 
+6 & 0.681 & 0.682 & 0.590 & 0.589 \\ \hline 
+7 & 0.691 & 0.692 & 0.611 & 0.611 \\ \hline 
+8 & 0.699 & 0.700 & 0.630 & 0.628 \\ \hline 
+9 & 0.708 & 0.706 & 0.644 & 0.641 \\ \hline 
+10 & 0.713 & 0.711 & 0.653 & 0.651 \\ \hline 
+11 & 0.716 & 0.714 & 0.660 & 0.660 \\ \hline 
+12 & 0.720 & 0.717 & 0.670 & 0.667 \\ \hline 
+13 & 0.719 & 0.720 & 0.674 & 0.674 \\ \hline 
+14 & 0.723 & 0.722 & 0.679 & 0.679 \\ \hline 
+15 & 0.724 & 0.724 & 0.684 & 0.684 \\ \hline 
+16 & 0.725 & 0.726 & 0.688 & 0.688 \\ \hline 
+17 & 0.728 & 0.727 & 0.695 & 0.691 \\ \hline 
+18 & 0.727 & 0.729 & 0.692 & 0.695 \\ \hline 
+19 & 0.730 & 0.730 & 0.699 & 0.698 \\ \hline 
+20 & 0.730 & 0.731 & 0.700 & 0.700 \\ \hline 
+21 & 0.733 & 0.732 & 0.703 & 0.703 \\ \hline 
+22 & 0.734 & 0.733 & 0.705 & 0.705 \\ \hline 
+23 & 0.732 & 0.733 & 0.705 & 0.707 \\ \hline 
+24 & 0.735 & 0.734 & 0.711 & 0.708 \\ \hline 
+25 & 0.733 & 0.735 & 0.710 & 0.710 \\ \hline 
+26 & 0.736 & 0.735 & 0.711 & 0.712 \\ \hline 
+27 & 0.732 & 0.736 & 0.710 & 0.713 \\ \hline 
+28 & 0.737 & 0.736 & 0.714 & 0.714 \\ \hline 
+29 & 0.737 & 0.737 & 0.715 & 0.716 \\ \hline 
+30 & 0.737 & 0.737 & 0.717 & 0.717 \\ \hline 
+31 & 0.739 & 0.738 & 0.719 & 0.718 \\ \hline 
+32 & 0.739 & 0.738 & 0.718 & 0.719 \\ \hline 
+33 & 0.738 & 0.738 & 0.718 & 0.720 \\ \hline 
+34 & 0.738 & 0.739 & 0.720 & 0.721 \\ \hline 
+35 & 0.738 & 0.739 & 0.719 & 0.721 \\ \hline 
+36 & 0.739 & 0.739 & 0.722 & 0.722 \\ \hline 
+37 & 0.741 & 0.740 & 0.725 & 0.723 \\ \hline 
+38 & 0.739 & 0.740 & 0.721 & 0.724 \\ \hline 
+39 & 0.742 & 0.740 & 0.727 & 0.724 \\ \hline 
+40 & 0.739 & 0.741 & 0.727 & 0.725 \\ \hline 
+41 & 0.741 & 0.741 & 0.725 & 0.726 \\ \hline 
+42 & 0.741 & 0.741 & 0.727 & 0.726 \\ \hline 
+43 & 0.745 & 0.741 & 0.729 & 0.727 \\ \hline 
+44 & 0.740 & 0.741 & 0.728 & 0.727 \\ \hline 
+45 & 0.743 & 0.742 & 0.730 & 0.728 \\ \hline 
+  \end{tabular}
+\end{center}
+
+\subsection{Probabilistic bounds} \label{probabilistic-bounds}
+
+Having the explicit expressions for expectation and variance we can make use of a couple of probabilistic inequalities, in order to estimate the probability of obtaining the correct placement of all $n$ pairs of characters:
+
+\begin{itemize}
+
+	\item Markov's inequality:
+	\begin{equation}
+		P(\xi \geqslant n) \leqslant {\Aver*{\xi} \over n} = {3n - 3 \over 4n^2 - 2n}
+	\end{equation}
+	
+	\item Chebyshev's inequality:
+	\begin{equation}
+	\begin{split}
+		P(\xi \geqslant n) & = P\left(\xi - \Aver*{\xi} \geqslant n - \Aver*{\xi} \right) \leqslant \\
+					   & \leqslant P\left( \left| \xi - \Aver*{\xi} \right| \geqslant n - \Aver*{\xi} \right) \leqslant \\
+					   & \leqslant {\Var(\xi) \over (n - \Aver*{\xi})^2} = {16 + 5n - 160n^2 + 215n^3 - 116n^4 + 24n^5 \over (n - 1) \cdot n \cdot (2n - 3) \cdot (4n^2 - 5n + 3)^2}
+	\end{split}
+	\end{equation}
+
+\end{itemize}
+
+Unfortunately, these probabilistic bounds are still very weak.
+
+\subsection{Speculation around the Poisson distribution} \label{poisson-distribution}
+
+The indicator random values of $\xi_i$ are not independent, hence generally speaking, we can't model the distribution of values of $\xi$ using the Poisson distribution.
+
+Nevertheless, let's consider the values of $\Aver*{\xi}$ and $\Var(\xi)$ for the large values of pairs $n$:
+
+\begin{equation}
+	\highlight{\lim_{n\to\infty} \Aver*{\xi}} = \lim_{n\to\infty} {3n - 3 \over 4n - 2} = \highlight{{3 \over 4}}
+\end{equation}
+
+\begin{equation}
+	\highlight{\lim_{n\to\infty} \Var(\xi)} = \lim_{n\to\infty} \left[ {3 \over 4} + {4 \over 3n} + {4 \over n - 1} - {127 \over 96 \cdot (2n - 3)} - {363 \over 32 \cdot (2n - 1)} - {9 \over 16 \cdot (2n - 1)^2} \right] = \highlight{{3 \over 4}}
+\end{equation}
+
+We can see, that $\lim_{n\to\infty} \Aver*{\xi} = \lim_{n\to\infty} \Var(\xi)$. Hence, to some extent, I assume that it is still viable to use a Poisson distribution as a rough approximation of the distribution of values of the random variable $\xi$. This assumption is also based on the observation, that occurrence of the correctly placed pairs of characters is a rare event.
+
+The event rate of the given Poisson distribution is $\lambda = {3 \over 4}$. Hence, the probability of occurrence of $k$ correctly placed pairs is:
+
+\begin{equation}
+\highlight{P(\xi = k)} = e^{-\lambda} \cdot {\lambda^k \over k!} = \highlight{e^{-{3 \over 4}} \cdot \left({3 \over 4}\right)^k \cdot {1 \over k!}}
+\end{equation}
+
+Let's evaluate this approximation experimentally: \\
+
+\begin{tabular}{| c | c | c | c |}
+\hline
+$n$ & $k$ & simulated $P(\xi = k)$ & Poisson $P(\xi = k)$ \\ \hline 
+20 & 0 & 0.47307 & 0.47237 \\ \hline 
+20 & 1 & 0.36148 & 0.35427 \\ \hline 
+20 & 2 & 0.13068 & 0.13285 \\ \hline 
+20 & 3 & 0.02946 & 0.03321 \\ \hline 
+20 & 4 & 0.00471 & 0.00623 \\ \hline 
+20 & 5 & 0.00056 & 0.00093 \\ \hline 
+20 & 6 & 0.00005 & 0.00012 \\ \hline 
+20 & 7 & 0.00000 & 0.00001 \\ \hline 
+\end{tabular}
+\quad
+\begin{tabular}{| c | c | c | c |}
+\hline
+$n$ & $k$ & simulated $P(\xi = k)$ & Poisson $P(\xi = k)$ \\ \hline 
+40 & 0 & 0.47407 & 0.47237 \\ \hline 
+40 & 1 & 0.35732 & 0.35427 \\ \hline 
+40 & 2 & 0.13153 & 0.13285 \\ \hline 
+40 & 3 & 0.03100 & 0.03321 \\ \hline 
+40 & 4 & 0.00533 & 0.00623 \\ \hline 
+40 & 5 & 0.00068 & 0.00093 \\ \hline 
+40 & 6 & 0.00008 & 0.00012 \\ \hline 
+40 & 7 & 0.00000 & 0.00001 \\ \hline 
+\end{tabular}
+
+The code of a Java application for simulation is inside appendix \ref{poisson-approximation-code}.
+
+\clearpage
+
+\appendix
+\section{Appendices}
+
+\subsection{The code for Brute-force exploration of the problem} \label{brute-force-code}
+Below is presented a snippet of Java code, which implements the brute-force recurrence (\ref{eq:e_0}):
+
+\begin{lstlisting}
+// BruteForce.java
+public class BruteForce {
+
+	public static void main(String... args) {
+		for (int alphabet_size = 1; alphabet_size < 11; alphabet_size++) {
+			check(alphabet_size);
+		}
+	}
+	static void check(int alphabet_size) {
+		if (can_solve(new boolean[2 * alphabet_size], 1, alphabet_size)) {
+			System.out.printf("%3d - no extra space needed %n", alphabet_size);
+
+		} else if (can_solve(new boolean[2 * alphabet_size + 1], 1, alphabet_size)) {
+			System.out.printf("%3d + requires extra space %n", alphabet_size);
+		}
+	}
+	static boolean can_solve(boolean[] occupied, int distance, int alphabet_size) {
+		if (distance == alphabet_size + 1) {
+			return true; // All positions are occupied, hence the problem can be solved
+		}
+		for (int pos = 0; pos < occupied.length - distance - 1; pos++) {
+			// Iterate over all available positions
+			if (!(occupied[pos] || occupied[pos + distance + 1])) {
+				occupied[pos] = true;
+				occupied[pos + distance + 1] = true;
+				if (can_solve(occupied, distance + 1, alphabet_size)) {
+					return true; // Problem can be solved
+				}
+				// Backtracking
+				occupied[pos] = false;
+				occupied[pos + distance + 1] = false;
+			}
+		}
+		return false; // No solutions found
+	}
+}
+\end{lstlisting}
+
+\clearpage
+
+\subsection{The code for experimental evaluation of the formulas for expectation and variance} \label{expectation-variance-code}
+
+\begin{lstlisting}
+// ExpectationVarianceCheck.java
+import java.util.*;
+
+public class ExpectationVarianceCheck {
+
+	public static void main(String[] args) {
+		Random rnd = new Random(1);
+		for (int size = 2; size < 46; size++) {
+			evaluate(size, rnd);
+		}
+	}
+
+	private static void evaluate(int size, Random rnd) {
+
+		int trials_count = 500000;
+
+		int correct_placements_cnt = 0;
+		int correct_placements_cnt_sqr = 0;
+		for (int i = 0; i < trials_count; i++) {
+			List<Character> characters = random_placement(size, rnd);
+			int correct = calc_correct_placements(characters);
+			correct_placements_cnt += correct;
+			correct_placements_cnt_sqr += correct * correct;
+		}
+
+		double avg_correct_placements =
+				(double) correct_placements_cnt / trials_count;
+		double experimental_variance =
+				(double) correct_placements_cnt_sqr / trials_count - Math.pow(avg_correct_placements, 2);
+
+		System.out.printf("%d  %3.3f  %3.3f  %3.3f  %3.3f %n",
+				size, avg_correct_placements, expectation(size),
+				experimental_variance, variance(size));
+	}
+
+	private static double expectation(int n) {
+		return (3.0 * n - 3) / (4 * n - 2);
+	}
+
+	private static double variance(int n) {
+		return 3.0 / 4 + 4.0 / (n - 1) + 4.0 / (3 * n)
+				- 127.0 / (96 * (2 * n - 3)) - 363.0 / (32 * (2 * n - 1))
+				- 9.0 / (16 * Math.pow(2 * n - 1, 2));
+	}
+
+	private static int calc_correct_placements(List<Character> characters) {
+		Map<Character, Integer> first_occurrence = new HashMap<>();
+		int correct = 0;
+		for (int i = 0; i < characters.size(); i++) {
+			char c = characters.get(i);
+			if (first_occurrence.get(c) == null) {
+				first_occurrence.put(c, i);
+			} else {
+				int firstOccurrencePos = first_occurrence.get(c);
+				if (i - firstOccurrencePos - 1 == c - 'A' + 1) {
+					correct++;
+				}
+			}
+		}
+		return correct;
+	}
+
+	private static List<Character> random_placement(int size, Random rnd) {
+		List<Character> characters = new ArrayList<>();
+		for (int i = 0; i < size; i++) {
+			char curr_char = (char) ('A' + i);
+			characters.add(curr_char);
+			characters.add(curr_char);
+		}
+		Collections.shuffle(characters, rnd);
+		return characters;
+	}
+}
+\end{lstlisting}
+
+\clearpage
+
+\subsection{The code for experimental evaluation of the Poisson approximation} \label{poisson-approximation-code}
+
+\begin{lstlisting}
+// PoissonDistributionCheck.java
+import java.util.*;
+
+public class PoissonDistributionCheck {
+
+	public static void main(String[] args) {
+		Random rnd = new Random(1);
+		for (int size = 20; size < 41; size += 5) {
+			evaluate(size, rnd);
+			System.out.println();
+		}
+	}
+
+	private static void evaluate(int size, Random rnd) {
+		int trialsCount = 500000;
+		Map<Integer, Integer> correct_placements_count = new TreeMap<>();
+		for (int i = 0; i < trialsCount; i++) {
+			List<Character> characters = random_placement(size, rnd);
+			int correct = calc_correct_placements(characters);
+			int count = correct_placements_count.getOrDefault(correct, 0);
+			correct_placements_count.put(correct, count + 1);
+		}
+		for (int correct : correct_placements_count.keySet()) {
+			int simulated_count = correct_placements_count.get(correct);
+			double simulated_prob = (double) simulated_count / trialsCount;
+			System.out.printf("%d %d %1.5f %1.5f %n", size, correct, simulated_prob, poisson_prob(correct));
+		}
+	}
+
+	private static double poisson_prob(int correct) {
+		long fact = factorial(correct);
+		return Math.exp(-0.75) * Math.pow(0.75, correct) / fact;
+	}
+
+	private static long factorial(int n) {
+		long fact = 1;
+		for (int i = 1; i <= n; i++) {
+			fact *= i;
+		}
+		return fact;
+	}
+
+	private static int calc_correct_placements(List<Character> characters) {
+		Map<Character, Integer> first_occurrence = new HashMap<>();
+		int correct = 0;
+		for (int i = 0; i < characters.size(); i++) {
+			char c = characters.get(i);
+			if (first_occurrence.get(c) == null) {
+				first_occurrence.put(c, i);
+			} else {
+				int firstOccurrencePos = first_occurrence.get(c);
+				if (i - firstOccurrencePos - 1 == c - 'A' + 1) {
+					correct++;
+				}
+			}
+		}
+		return correct;
+	}
+
+	private static List<Character> random_placement(int size, Random rnd) {
+		List<Character> characters = new ArrayList<>();
+		for (int i = 0; i < size; i++) {
+			char curr_char = (char) ('A' + i);
+			characters.add(curr_char);
+			characters.add(curr_char);
+		}
+		Collections.shuffle(characters, rnd);
+		return characters;
+	}
+}
+
+\end{lstlisting}
+
+\clearpage
+
+\subsection{Simulated Annealing solution} \label{simulated-annealing-solution}
+
+\begin{lstlisting}
+// SimulatedAnnealingSolution.java
+import java.util.*;
+
+public class SimulatedAnnealingSolution {
+
+	private static final boolean DEBUG_OUTPUT = false;
+
+	public static void main(String[] args) {
+		for (int size = 1; size <= 100; size++) {
+			int[] solution = findOptimalSolution(size);
+			int error = calcError(solution);
+			if (error > 0.1) {
+				break;
+			}
+			System.out.println(size + "\t" + error + "\t" + solutionToString(solution));
+		}
+	}
+
+	private static int[] findOptimalSolution(int size) {
+		return findOptimalSolution(size, 0.1, 1000, 0.01, 0.999, 100, new Random(1));
+	}
+
+	private static int[] findOptimalSolution(
+			int size,
+			double minEnergy, // minimal value of energy (termination criteria)
+			double initialTemperature, // initial temperature
+			double minTemperature, // minimal value of temperature (termination criteria)
+			double temperatureDecreaseRatio, // (decreasing geometric progression)
+			int numberOfTrials, // per iteration
+			Random random) {
+
+		// Initialize current solution
+		int[] currentSolution = generateInitialSolution(size);
+		int sequenceLength = currentSolution.length;
+
+		// Initialize energy of a current solution
+		int[] counter = new int[size + 1];
+		int currentEnergy = calcError(currentSolution, counter);
+
+		if (DEBUG_OUTPUT) {
+			System.out.println("Current energy is: " + currentEnergy);
+		}
+
+		// Memorize the solution with smallest value of energy
+		int[] bestSolution = currentSolution.clone();
+		int bestEnergy = currentEnergy;
+
+		double temperature = initialTemperature;
+
+		while (temperature > minTemperature
+				&& currentEnergy > minEnergy) {
+
+			for (int i = 0; i < numberOfTrials; i++) {
+
+				// Generate new solution:
+				// swap two nearby items
+				int pos1 = random.nextInt(sequenceLength);
+				int pos2 = (pos1 + 1) % sequenceLength;
+				swap(currentSolution, pos1, pos2);
+
+				int newEnergy = calcError(currentSolution, counter);
+
+				// According to the Boltzmann distribution
+				double acceptanceProbability =
+						Math.exp(-(newEnergy - currentEnergy) / temperature);
+
+				// Solutions with smaller energy - will be accepted always
+				if (newEnergy < currentEnergy
+						|| random.nextDouble() < acceptanceProbability) {
+
+					currentEnergy = newEnergy;
+					if (DEBUG_OUTPUT) {
+						System.out.println("Current energy is: " + currentEnergy);
+					}
+
+					if (newEnergy < bestEnergy) {
+						// Current solution is better than the best solution found so far
+						System.arraycopy(currentSolution, 0, bestSolution, 0, currentSolution.length);
+						bestEnergy = newEnergy;
+					}
+				} else {
+					// If solution can't be accepted - rollback:
+					// un-swap the items, which were swapped
+					swap(currentSolution, pos1, pos2);
+				}
+			}
+			// Decreasing temperature
+			temperature *= temperatureDecreaseRatio;
+		}
+		// Return the best solution
+		return bestSolution;
+	}
+
+	private static final int GAP_ITEM = -1;
+
+	// Initial solution is: "1 1 2 2 3 3...."
+	private static int[] generateInitialSolution(int size) {
+		boolean withGap = (size - 3) % 4 != 0 && size % 4 != 0;
+		int sequenceLength = 2 * size;
+		if (withGap) {
+			sequenceLength += 1;
+		}
+		int[] sequence = new int[sequenceLength];
+		int pos = 0;
+		for (int i = 0; i < size; i++) {
+			int currChar = i + 1;
+			sequence[pos] = currChar;
+			sequence[pos + 1] = currChar;
+			pos += 2;
+		}
+		if (withGap) {
+			sequence[sequence.length - 1] = GAP_ITEM;
+		}
+		return sequence;
+	}
+
+	private static final int NOT_INITIALIZED = -1;
+
+	private static int calcError(int[] sequence, int[] counter) {
+		Arrays.fill(counter, NOT_INITIALIZED);
+		int error = 0;
+		for (int i = 0; i < sequence.length; i++) {
+			int item = sequence[i];
+			if (item == GAP_ITEM) {
+				continue;
+			}
+			if (counter[item] == NOT_INITIALIZED) {
+				int expectedPosition = i + item + 1;
+				counter[item] = expectedPosition;
+			} else {
+				int expectedPosition = counter[item];
+				error += Math.abs(expectedPosition - i);
+			}
+		}
+		return error;
+	}
+
+	private static int calcError(int[] sequence) {
+		return calcError(sequence, new int[sequence.length / 2 + 1]);
+	}
+
+	private static void swap(int[] sequence, int i, int j) {
+		int tmp = sequence[i];
+		sequence[i] = sequence[j];
+		sequence[j] = tmp;
+	}
+
+	private static String solutionToString(int[] solution) {
+		char[] chars = new char[solution.length];
+		for (int i = 0; i < solution.length; i++) {
+			if (solution[i] == GAP_ITEM) {
+				chars[i] = '-';
+			} else {
+				chars[i] = (char) ('A' + solution[i] - 1);
+			}
+		}
+		return new String(chars);
+	}
+}
+\end{lstlisting}
+
+\end{document}
